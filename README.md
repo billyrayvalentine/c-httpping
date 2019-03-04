@@ -1,6 +1,6 @@
 # c-httpping
-httpping
-A simple tool to ping HTTP servers and return a HTTP code
+httpping - A simple tool to ping HTTP servers and return a HTTP code
+
 (c) Ben Sampson <https://github.com/billyrayvalentine>
 
 # Usage
