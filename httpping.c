@@ -78,6 +78,13 @@ int main(int argc, char *argv[])
     }
   }
 
+  if (!(num_of_pings >0)) {
+    fprintf(stderr, "Invalid number_of_pings\n");
+    usage();
+    exit(1);
+  }
+
+
   /*
      if (! c_handle) {
      printf("Could not setup curl, exiting");
@@ -159,7 +166,7 @@ int main(int argc, char *argv[])
 void usage()
 {
   printf("Usage: httpping <url> [-nfmh]\n");
-  printf("\t-n num_of_pings - number of times to ping.  Default = Ping forever\n");
+  printf("\t-n number_of_pings - number of times to ping.  Default = Ping forever\n");
   printf("\t-f follow_redirects - follow HTTP 3xx redirects.  Default = 0\n");
   printf("\t-m machine_readable - output in a machine friendly format.  Default = 0\n");
   printf("\t-h - this message\n");
