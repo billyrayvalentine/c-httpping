@@ -1,3 +1,5 @@
 * time in ms - NEEDS 7.61.0
 * set sleep time
 * sort out uncrustify standard
+* timeout behaviour unknown
+* option for getting the body

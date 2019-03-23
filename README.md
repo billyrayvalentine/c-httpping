@@ -14,7 +14,7 @@ httpping www.nationalrail.co.uk
 
 Ping just once
 ```
-httpping www.nationalrail.co.uk -n1           
+httpping www.nationalrail.co.uk -c1           
 200 from HTTP://www.nationalrail.co.uk/ header size = 388 in 0.1 seconds seq=1
 ```
 
@@ -44,15 +44,19 @@ httpping https://www.mi5.gov.uk/noobs.php -m
 
 ## Args
 ```
-Usage: httpping <url> [-nfmh]
-        -n num_of_pings - number of times to ping.  Default = Ping forever
-        -f follow_redirects - follow HTTP 3xx redirects.  Default = 0
-        -m machine_readable - output in a machine friendly format.  Default = 0
-        -h - this message
+Usage: httpping <url> [-cfmh?]
+  -c, --number-pings=COUNT     number of times to ping
+  -f, --follow-redirects       Follow HTTP 3XX redirects
+  -m, --machine-readable       machine friendly output
+
+Help options:
+  -?, --help                   Show this help message
+      --usage                  Display brief usage message
+
 ```
 
 # Install
-Needs libcurl-devel
+Needs libcurl-devel and popt
 ```
 make
 sudo make install

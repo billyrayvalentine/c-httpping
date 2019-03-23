@@ -18,86 +18,80 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <getopt.h>
+#include <popt.h>
 #include <curl/curl.h>
 
-void usage(void);
 void bail(CURLcode res);
 
 int main(int argc, char *argv[])
 {
   // command line args
-  int num_of_pings = 1;
-  int machine_readable = 0;
-  int ping_forever = 1;
-  int follow_redirects = 0;
+  int arg_num_of_pings = 0;
+  int arg_machine_readable = 0;
+  int arg_follow_redirects = 0;
+  const char *arg_url;
 
-  int opt;
   int keep_pinging = 1;
+  int ping_forever = 0;
   int ping_count = 0;
   long response_code, header_size;
   double total_time;
   // curl_off_t total;
-  char *url;
   char *effective_url;
   CURL *c_handle;
   CURLcode res;
 
+  poptContext pc;
+  struct poptOption poptoptions[] = {
+    {"number-pings", 'c', POPT_ARG_INT, &arg_num_of_pings, 0, "number of times to ping", "COUNT"},
+    {"follow-redirects", 'f', POPT_ARG_NONE, &arg_follow_redirects, 0, "Follow HTTP 3XX redirects", NULL},
+    {"machine-readable", 'm', POPT_ARG_NONE, &arg_machine_readable, 0, "machine friendly output", NULL},
+		POPT_AUTOHELP
+    POPT_TABLEEND
+  };
 
-  // Get args
-  if (argc < 2) {
-    usage();
-    exit(1);
+  pc = poptGetContext(NULL, argc, (const char **)argv, poptoptions, 0);
+
+  poptSetOtherOptionHelp(pc, "<url> [-cfmh?]");
+
+	int opt;
+	opt = poptGetNextOpt(pc);
+
+
+  // Process any errors
+  if (opt < -1) {
+    fprintf(stderr, "%s: %s\n",
+      poptBadOption(pc, POPT_BADOPTION_NOALIAS),
+      poptStrerror(opt));
+      poptPrintHelp(pc, stderr, 0);
+      exit(EXIT_FAILURE);
   }
 
-  url = argv[1];
-
-  while ((opt = getopt(argc, argv, "n:mfh")) != -1) {
-    switch (opt) {
-
-    case 'n':
-      num_of_pings = atoi(optarg);
-      ping_forever = 0;
-      break;
-
-    case 'm':
-      machine_readable = 1;
-      break;
-
-    case 'f':
-      follow_redirects = 1;
-      break;
-
-    case 'h':
-      usage();
-      exit(0);
-
-    case '?':
-      usage();
-      exit(1);
-    }
+  // Get the URL arg - only except one
+  if (! poptPeekArg(pc)) {
+    fprintf(stderr, "missing url\n");
+      poptPrintHelp(pc, stderr, 0);
+      exit(EXIT_FAILURE);
   }
-
-  if (!(num_of_pings >0)) {
-    fprintf(stderr, "Invalid number_of_pings\n");
-    usage();
-    exit(1);
+  else {
+    arg_url = poptGetArg(pc);
+    // Any remaining args are ignored
   }
-
 
   /*
-     if (! c_handle) {
-     printf("Could not setup curl, exiting");
-     exit(1);
-     }
-   */
+  printf("Got options num_of_pings = %d, url = %s, follow_redirects=%d, machine_readable=%d",
+      arg_num_of_pings, arg_url, arg_follow_redirects, arg_machine_readable);
+  printf(" opt =%d\n", opt);
+  */
+
+  poptFreeContext(pc);
 
   // Main loop
   while (keep_pinging) {
     c_handle = curl_easy_init();
-    curl_easy_setopt(c_handle, CURLOPT_URL, url);
+    curl_easy_setopt(c_handle, CURLOPT_URL, arg_url);
 
-    if (follow_redirects) {
+    if (arg_follow_redirects) {
       curl_easy_setopt(c_handle, CURLOPT_FOLLOWLOCATION, 1L);
     }
 
@@ -138,7 +132,7 @@ int main(int argc, char *argv[])
 
     ping_count++;
 
-    if (machine_readable) fprintf(stdout,
+    if (arg_machine_readable) fprintf(stdout,
                                   "%ld %s %ld %.1f %d\n",
                                   response_code,
                                   effective_url,
@@ -157,23 +151,14 @@ int main(int argc, char *argv[])
     curl_easy_cleanup(c_handle);
     sleep(1);
 
-    if (ping_forever == 0 && ping_count == num_of_pings)
+    if (ping_forever == 0 && ping_count == arg_num_of_pings)
       keep_pinging = 0;
   }
-  return 0;
-}
-
-void usage()
-{
-  printf("Usage: httpping <url> [-nfmh]\n");
-  printf("\t-n number_of_pings - number of times to ping.  Default = Ping forever\n");
-  printf("\t-f follow_redirects - follow HTTP 3xx redirects.  Default = 0\n");
-  printf("\t-m machine_readable - output in a machine friendly format.  Default = 0\n");
-  printf("\t-h - this message\n");
+  return EXIT_SUCCESS;
 }
 
 void bail(CURLcode curl_code)
 {
   fprintf(stderr, "failed: %s\n", curl_easy_strerror(curl_code));
-  exit(1);
+  exit(EXIT_FAILURE);
 }
